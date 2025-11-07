@@ -17,9 +17,9 @@
             margin: 0;
             padding: 0;
             background: #fde7e7;
-            /* ===== THAY ĐỔI 1: Cho phép cuộn trang nếu nội dung quá dài ===== */
             overflow-y: auto;
             overflow-x: hidden;
+            position: relative;
         }
         #loader {
             position: fixed;
@@ -57,12 +57,11 @@
             font-size: 1.5em; 
         }
         
-        /* ===== THAY ĐỔI 2: Mở rộng thẻ và thêm khoảng đệm ===== */
         #birthday-card {
             display: none; 
             position: relative;
-            max-width: 700px; /* Tăng chiều rộng tối đa */
-            margin: 5vh auto 10vh auto; /* Thêm lề dưới để cuộn thoải mái */
+            max-width: 700px; 
+            margin: 5vh auto 10vh auto; 
             padding: 40px;
             background: rgba(255, 255, 255, 0.9); 
             border-radius: 20px;
@@ -85,16 +84,13 @@
             margin-bottom: 20px;
         }
         
-        /* ===== THAY ĐỔI 3: Cho phép text tự xuống dòng ===== */
         .message-line {
             font-family: 'Dancing Script', cursive; 
             font-size: 1.8em; 
             color: #e91e63; 
             line-height: 1.8;
-            /* height: 2.2em;  <-- Xóa bỏ chiều cao cố định */
             display: block; 
-            /* white-space: nowrap; <-- Xóa bỏ để cho phép chữ xuống dòng */
-            margin-bottom: 10px; /* Thêm khoảng cách giữa các dòng */
+            margin-bottom: 10px; 
         }
         .typing-cursor {
             display: inline-block;
@@ -127,6 +123,86 @@
             pointer-events: none; 
             z-index: 99;
         }
+
+        .side-image-container {
+            position: absolute;
+            top: 50%; 
+            transform: translateY(-50%); 
+            display: flex;
+            flex-direction: column;
+            gap: 25px; /* Tăng khoảng cách giữa các ảnh một chút */
+            z-index: 40; 
+            opacity: 0; 
+            transition: opacity 0.7s ease-in;
+            
+            /* Chiều rộng container ảnh đã to hơn (240px ảnh + 2*8px padding + 2*8px viền bóng đổ = ~272px) */
+            width: 272px; 
+        }
+        .side-image-container.visible {
+            opacity: 1;
+        }
+
+        /* ===== CẬP NHẬT: Trang trí khung ảnh To gấp đôi & Nghiêng 20 độ ===== */
+        .side-image {
+            width: 240px; /* Gấp đôi từ 120px */
+            height: 240px; /* Gấp đôi từ 120px */
+            object-fit: cover;
+            border-radius: 15px; 
+
+            padding: 10px; /* Tăng padding để khung trắng rộng hơn */
+            background: #ffffff; 
+            
+            box-shadow: 
+                0 0 0 3px rgba(255, 255, 255, 0.8), /* Viền trắng trong suốt nhẹ */
+                0 0 0 10px #f9a8d4, /* Viền hồng chủ đạo, dày hơn */
+                0 10px 25px rgba(0, 0, 0, 0.2); /* Bóng đổ mềm mại */
+            
+            border-radius: 25px; 
+            
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+
+        /* Hiệu ứng khi di chuột qua ảnh */
+        .side-image:hover {
+            transform: translateY(-8px) scale(1.03) var(--rotate-direction); /* Nhấc nhẹ lên, to ra, giữ độ nghiêng */
+            box-shadow: 
+                0 0 0 3px rgba(255, 255, 255, 0.8), 
+                0 0 0 10px #e91e63, /* Đổi màu viền hồng đậm hơn khi hover */
+                0 15px 30px rgba(0, 0, 0, 0.35); /* Bóng đổ rõ hơn */
+        }
+
+        /* Áp dụng độ nghiêng và lưu vào biến CSS */
+        #left-images .side-image {
+            transform: rotate(20deg);
+            --rotate-direction: rotate(20deg); /* Biến để dùng trong hover */
+        }
+        #right-images .side-image {
+            transform: rotate(-20deg); /* Nghiêng ngược lại */
+            --rotate-direction: rotate(-20deg); /* Biến để dùng trong hover */
+        }
+
+        /* ===== CẬP NHẬT: Định vị ảnh "bó sát" vào thiệp (với kích thước mới) ===== */
+        /*
+          Giải thích phép tính:
+          - 50%: tâm màn hình
+          - 350px: một nửa chiều rộng của thiệp (max-width: 700px / 2)
+          - 30px: khoảng cách bạn muốn giữ giữa ảnh và thiệp (tăng lên một chút)
+          - 272px: chiều rộng ước tính của khung ảnh đã to (width của .side-image-container)
+        */
+        #left-images {
+            left: calc(50% - 350px - 30px - 272px); 
+        }
+
+        #right-images {
+            left: calc(50% + 350px + 30px);
+        }
+
+        /* ===== CẬP NHẬT: Điều chỉnh responsive (vì ảnh lớn hơn) ===== */
+        @media (max-width: 1300px) { /* Tăng từ 1050px lên 1300px */
+            .side-image-container {
+                display: none; 
+            }
+        }
     </style>
 </head>
 <body>
@@ -137,6 +213,13 @@
     </div>
     
     <canvas id="confetti-canvas"></canvas>
+
+    
+    <div id="left-images" class="side-image-container">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+trái+1" alt="Ảnh trang trí 1">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+trang trí 2">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+trang trí 3">
+    </div>
 
     <div id="birthday-card">
         <h1>Chúc Mừng Sinh Nhật! 🎂</h1>
@@ -158,6 +241,13 @@
         <img id="cute-gif" src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRsMnRua2tld3dueDNvZ3FzNnR1b2JneHQyOHVqamNqMmI5OHViZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2tNvsKkc0qM3m/giphy.gif" alt="Cute GIF">
     </div>
 
+    
+    <div id="right-images" class="side-image-container">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+phải+1" alt="Ảnh trang trí 4">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+phải+2" alt="Ảnh trang trí 5">
+        <img class="side-image" src="https://via.placeholder.com/240/FFC0CB/FFFFFF?text=Ảnh+phải+3" alt="Ảnh trang trí 6">
+    </div>
+
     <audio id="bg-music" src="./Hesitations.mp3" loop></audio>
 
 
@@ -168,13 +258,14 @@
             const birthdayCard = document.getElementById('birthday-card');
             const cuteGif = document.getElementById('cute-gif');
             const bgMusic = document.getElementById('bg-music');
+            const leftImagesContainer = document.getElementById('left-images');
+            const rightImagesContainer = document.getElementById('right-images');
             
             const myConfetti = confetti.create(document.getElementById('confetti-canvas'), {
                 resize: true,
                 useWorker: true
             });
 
-            // Các lời chúc của bạn (giữ nguyên)
             const messages = [
                 { el: '#line1', text: "❤️ Gửi em, tình yêu của anh! ❤️" },
                 { el: '#line2', text: "Yêu em Chúc em sinh nhật vui vẻ,người con gái ta thương.❤️" },
@@ -195,6 +286,8 @@
                 loader.classList.add('hidden');
                 bgMusic.play().catch(e => console.log("Không thể tự động phát nhạc:", e));
                 birthdayCard.classList.add('visible');
+                leftImagesContainer.classList.add('visible'); 
+                rightImagesContainer.classList.add('visible'); 
                 startConfetti();
                 startTyping();
             });
@@ -231,7 +324,6 @@
 
                 for (const msg of messages) {
                     const el = document.querySelector(msg.el);
-                    // Dừng lại nếu không tìm thấy thẻ HTML (lỗi cũ)
                     if (!el) {
                         console.error('Không tìm thấy phần tử:', msg.el);
                         continue;
