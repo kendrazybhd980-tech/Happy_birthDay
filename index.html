@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Món Quà Đặc Biệt!</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fde7e7;
+            /* ===== THAY ĐỔI 1: Cho phép cuộn trang nếu nội dung quá dài ===== */
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #fde7e7;
+            z-index: 100;
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        #loader.hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+        }
+        #gift-box {
+            width: 250px;
+            height: 250px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        #gift-box:hover {
+            transform: scale(1.1);
+        }
+        #loader p {
+            font-size: 1.2em;
+            color: #e91e63; 
+            margin-top: 20px;
+            font-family: 'Dancing Script', cursive; 
+            font-size: 1.5em; 
+        }
+        
+        /* ===== THAY ĐỔI 2: Mở rộng thẻ và thêm khoảng đệm ===== */
+        #birthday-card {
+            display: none; 
+            position: relative;
+            max-width: 700px; /* Tăng chiều rộng tối đa */
+            margin: 5vh auto 10vh auto; /* Thêm lề dưới để cuộn thoải mái */
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.9); 
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.7s 0.3s ease-in, transform 0.7s 0.3s ease-in;
+            z-index: 50;
+        }
+        #birthday-card.visible {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+        #birthday-card h1 {
+            font-family: 'Dancing Script', cursive;
+            font-size: 3.5em;
+            color: #e91e63; 
+            margin-bottom: 20px;
+        }
+        
+        /* ===== THAY ĐỔI 3: Cho phép text tự xuống dòng ===== */
+        .message-line {
+            font-family: 'Dancing Script', cursive; 
+            font-size: 1.8em; 
+            color: #e91e63; 
+            line-height: 1.8;
+            /* height: 2.2em;  <-- Xóa bỏ chiều cao cố định */
+            display: block; 
+            /* white-space: nowrap; <-- Xóa bỏ để cho phép chữ xuống dòng */
+            margin-bottom: 10px; /* Thêm khoảng cách giữa các dòng */
+        }
+        .typing-cursor {
+            display: inline-block;
+            width: 3px;
+            height: 1.2em;
+            background-color: #e91e63; 
+            animation: blink 0.7s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        #cute-gif {
+            width: 200px;
+            margin-top: 20px;
+            border-radius: 10px;
+            opacity: 0; 
+            transition: opacity 1s ease-in;
+        }
+        #cute-gif.visible {
+            opacity: 1; 
+        }
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader">
+        <img id="gift-box" src="./gift.png" alt="Hộp quà">
+        <p>Click vào món quà nhé!</p>
+    </div>
+    
+    <canvas id="confetti-canvas"></canvas>
+
+    <div id="birthday-card">
+        <h1>Chúc Mừng Sinh Nhật! 🎂</h1>
+        
+        <span class="message-line" id="line1"></span>
+        <span class="message-line" id="line2"></span>
+        <span class="message-line" id="line3"></span>
+        <span class="message-line" id="line4"></span>
+        <span class="message-line" id="line5"></span>
+        <span class="message-line" id="line6"></span>
+        <span class="message-line" id="line7"></span>
+        <span class="message-line" id="line8"></span>
+        <span class="message-line" id="line9"></span>
+        <span class="message-line" id="line10"></span>
+        <span class="message-line" id="line11"></span>
+        <span class="message-line" id="line12"></span>
+        <span class="message-line" id="line13"></span>
+        
+        <img id="cute-gif" src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTRsMnRua2tld3dueDNvZ3FzNnR1b2JneHQyOHVqamNqMmI5OHViZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2tNvsKkc0qM3m/giphy.gif" alt="Cute GIF">
+    </div>
+
+    <audio id="bg-music" src="./Hesitations.mp3" loop></audio>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('loader');
+            const giftBox = document.getElementById('gift-box');
+            const birthdayCard = document.getElementById('birthday-card');
+            const cuteGif = document.getElementById('cute-gif');
+            const bgMusic = document.getElementById('bg-music');
+            
+            const myConfetti = confetti.create(document.getElementById('confetti-canvas'), {
+                resize: true,
+                useWorker: true
+            });
+
+            // Các lời chúc của bạn (giữ nguyên)
+            const messages = [
+                { el: '#line1', text: "❤️ Gửi em, tình yêu của anh! ❤️" },
+                { el: '#line2', text: "Yêu em Chúc em sinh nhật vui vẻ,người con gái ta thương.❤️" },
+                { el: '#line3', text: "~~~~Nàng Thơ và những ngày bên cạnh nàng 👩~~~" },
+                { el: '#line4', text: "Meoooo, khi bên cạnh tôi, em có vẻ là sinh vật vô hại." },
+                { el: '#line5', text: "Em giống một con mèo quanh quẩn bên cảnh tôi cả ngày😻😻😻" },
+                { el: '#line6', text: "Con mèo không thèm đọng đến điện thoai, nàng chỉ ngồi đó mở bài nhạc mà cả 2 nghe cùng và lắc lư theo điệu nhạc đôi khi cười khúc khích yên vị khi thấm những dòng lyric" },
+                { el: '#line7', text: "Con mèo ngồi lên người tôi vuốt tóc tôi rồi hỏi bao giờ anh lại về, nhớ anh quá à." },
+                { el: '#line8', text: "Con mèo bò lên người tôi, yên vị ép tai nàng lên lồng ngực trái, người anh nóng thê, tim tôi lại đập nhanh nữa rồi." },
+                { el: '#line9', text: "Ôi tôi bỗng dưng trở thành chú cún nhỏ, một chú cún chỉ biết hít và liếm trên lớp da của nàng làm như là chưa bao h được liếm và người.🐈🐈" },
+                { el: '#line10', text: "😊😊 hít thật sâu vì đó là những khoảnh khắc quý giá nhất mà." },
+                { el: '#line11', text: "Móng tay em cào cào vào da thịt tôi, ôi pé ní của em nhớ quá 🥰🥰🥰" },
+                { el: '#line12', text: "Tôi nhìn em lại thấy tình yêu này sao nó yên bình làm sao thời gian có thể dừng lại đây khi cả 2 chỉ cần như vậy cũng có thể qua những chuổi ngày mà vô ưu vô lo. " },
+                { el: '#line13', text: "Yêu em rất nhiều! 🎉" }
+            ];
+
+            loader.addEventListener('click', () => {
+                loader.classList.add('hidden');
+                bgMusic.play().catch(e => console.log("Không thể tự động phát nhạc:", e));
+                birthdayCard.classList.add('visible');
+                startConfetti();
+                startTyping();
+            });
+
+            function startConfetti() {
+                const duration = 5 * 1000;
+                const end = Date.now() + duration;
+
+                function frame() {
+                    myConfetti({
+                        particleCount: 2,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 }
+                    });
+                    myConfetti({
+                        particleCount: 2,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 }
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }
+                frame(); 
+            }
+
+            async function startTyping() {
+                const cursor = document.createElement('span');
+                cursor.className = 'typing-cursor';
+                cursor.textContent = '|';
+
+                for (const msg of messages) {
+                    const el = document.querySelector(msg.el);
+                    // Dừng lại nếu không tìm thấy thẻ HTML (lỗi cũ)
+                    if (!el) {
+                        console.error('Không tìm thấy phần tử:', msg.el);
+                        continue;
+                    }
+
+                    el.appendChild(cursor); 
+                    await typeLine(el, msg.text, cursor);
+                    el.removeChild(cursor);
+                }
+                
+                cursor.remove(); 
+                cuteGif.classList.add('visible'); 
+            }
+            
+            function typeLine(element, text, cursor) {
+                return new Promise(resolve => {
+                    let index = 0;
+                    const speed = 100; 
+                    
+                    const span = document.createElement('span'); 
+                    element.insertBefore(span, cursor); 
+
+                    function type() {
+                        if (index < text.length) {
+                            span.textContent += text.charAt(index);
+                            index++;
+                            setTimeout(type, speed);
+                        } else {
+                            resolve(); 
+                        }
+                    }
+                    type();
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
